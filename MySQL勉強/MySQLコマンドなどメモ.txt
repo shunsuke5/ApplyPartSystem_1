@@ -44,7 +44,13 @@ insert into テーブル名 values ('値1','値2', …);
 　→ テーブルに新しいレコードを追加する。左の列から順に値1,値2と格納していく。
 
 selectステートメント
-　→ テーブルの内容を取り出す。使い方の例としては以下。
+　→ テーブルの内容を取り出す。一般的な形式は以下の通り。
+
+　　select what_to_select = 取得する対象。カラムのリストか、「全てのカラム」を表す * を指定できる。
+　　from which_table = データを取り出すテーブルを指定する。
+　　where conditions_to_satisfy; = オプション。name = 'tatle'でnameがtatleのレコードを表示する、など。
+
+　　具体的なコマンド例を以下に書いていく。
 
 　　select * from テーブル名;
 　　　→ テーブルの全ての内容を取り出す。ただし、テーブルに非表示カラムが含まれている場合、
@@ -76,12 +82,35 @@ selectステートメント
 　　select name, birth, curdate(), timestampdiff(year,birth,curdate()) as age from pet;
 　　　→ timestampdiff()関数を用いて年齢を表示している。
 
+　　select name, birth, death, timestampdiff(year,birth,death) as age from pet where death is not NULL order by age;
+　　　→ deathの欄がNULLでない(亡くなった)子の生前の年齢を表示している。NULLは通常の比較演算子を使用して
+　　　　比較することができない特殊な値であるため、death <> NULL ではなく、death is not NULL を使用している。
+
+　　select name, birth from pet where month(birth) = '8';
+　　　→ 8月が誕生月の子を探している。
+
+　　select name, birth from pet where month(birth) = month(date_add(curdate(),interval 1 month));
+　　　→ 現在が何月であっても、来月が誕生月の子を抽出する。
+　　　　現在が12月の場合でも、date_add関数を使っているため13月のようなおかしなことにはならない。
+
+　　select name, birth from pet where month(birth) = mod(month(curdate()),12) + 1;
+　　　→ 1つ上と同じ結果(来月が誕生月の子)を返す。
+　　　　このようにモジュロ関数(MOD)を適用する方法でも1つ上のコマンドと同じような結果を返すことができる。
+　　　　ただし、モジュロ関数は例えば12を指定すると0～11までの数値を返すため、mod()のあとで加算を行う
+　　　　必要がある点に注意する。
+
+　　select * from pet where name like 't%';
+　　　→ SQLパターン一致を使用して、name が t から始めるレコードを抽出している。
+
 delete from テーブル名;
 　→ テーブルの全ての内容を消去する。
 
 update テーブル名 set 変更するフィールド名 = '変更後の値' where 検索するフィールド名 = '一致する値';
 　→ 該当するレコードだけを変更する。例としては以下の通り。
 　　update pet set birth = '1989-08-31' where name = 'fluffy';
+
+show warnings;
+　→ 警告を表示する。
 
 ============================================================================================================================
 
