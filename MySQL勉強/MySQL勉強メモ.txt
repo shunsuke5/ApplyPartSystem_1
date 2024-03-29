@@ -94,6 +94,19 @@ MySQL勉強メモ
 　任意の文字列(正規表現の .* みたいなもの)を照合できる。MySQLのデフォルトでは、SQLパターンでは大文字と小文字が区別されない。
 　SQLパターンを使用する場合は、=または<>のかわりにlike,not like 比較演算子を使用する
 
+・count()値を使用する場合、select species のように選択するカラムを指定する場合は、それらのカラム(この例ではspecies)を
+　group by句で指定する必要がある。つまり　select species, count(*) from pet group by species;　のようにしなければならない。
+　そうでない場合、ONLY_FULL_GROUP_BY SQLモードが有効である場合は　select owner, count(*) from pet;　の文に対して、
+　「ERROR 1140 (42000): In aggregated query without GROUP BY, expression #1 of SELECT list contains nonaggregated column 
+　'menagerie.pet.owner';this is incompatible with sql_mode=only_full_group_by」のエラーが出る。
+　ONLY_FULL_GROUP_BY SQLモードが有効でない場合は、select owner, count(*) from pet; の文に対して
+　+--------+----------+
+| owner  | COUNT(*) |
++--------+----------+
+| Harold |        8 |
++--------+----------+
+　のように表示される。
+
 ・
 
 ============================================================================================================================
@@ -132,5 +145,10 @@ MySQL勉強メモ
 　　　これによる違いが上手くいかなかった原因と思われる。試しにフィールドの区切りをタブ空白ではなく
 　　　,区切りにしてFIELDS TERMINATED BY ','にしたら上手くデータがロードできた。\tの代わりに\sを指定しても
 　　　なんか変なことになるので,で区切ることにした方が良いかもしれない。
+　　　それと　LINES TERMINATED BY '\r\n'　
+
+・パーティショニングとは、1つのテーブルデータを分割して管理すること。パーティショニングを行うことで
+　巨大なデータを複数に分割でき、分割されたデータを丸ごと削除したり、select時に特定のパーティションを参照することで
+　特定のパーティションのみをselectの対象として絞り込むことができる。
 
 ・
