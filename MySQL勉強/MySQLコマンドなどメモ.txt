@@ -17,7 +17,9 @@ select database();
 　→ 現在選択しているデータベースを表示する。
 
 show tables;
-　→　データベースが保持しているテーブルの一覧を表示する。
+　→ データベースが保持しているテーブルの一覧を表示する。
+　　この結果で表示される「Tables_in_〇〇」の〇〇はデータベース名となっているため、
+　　データベース名を参照したい時にも便利。
 
 create table テーブル名 (列名1 列のデータ型, 列名2 列のデータ型…);
 　→ テーブルのレイアウトを指定する。
@@ -132,14 +134,27 @@ selectステートメント
 　　　select species, sex, count(*) from pet where species = 'dog' or species = 'cat' group by species, sex;
 　　　　→ 1つ上の処理を犬と猫だけを対象にして行う。
 
-　　　SELECT pet.name,
-    　->        TIMESTAMPDIFF(YEAR,birth,date) AS age,
-    　->        remark
-    　->        FROM pet INNER JOIN event
-    　->          ON pet.name = event.name
-    　->        WHERE event.type = 'litter';
+　　　select pet.name,timestampdiff(year,birth,date) as age,
+    　-> remark
+    　-> from pet inner join event
+    　-> on pet.name = event.name
+    　-> where event.type = 'litter';
+
+　　　+--------+------+---------------------------+
+　　　| name   | age  | remark                    |
+　　　+--------+------+---------------------------+
+　　　| Fluffy |    2 | 4 kittens,3 female,1 male |
+　　　| Buffy  |    5 | 3 puppies,3 female        |
+　　　| Buffy  |    4 | 5 puppies,2 female,3 male |
+　　　+--------+------+---------------------------+
+
 　　　　→ 各ペットの出産時の年齢を調べるために、生年月日をpetテーブルから、
 　　　　　出産日をeventテーブルから取り出し、出産時の年齢を表示している。
+　　　　　最初でpet.nameとしているのに、birthとdateは同じような指定をしていない理由は、
+　　　　　birthカラムはpetテーブルにしかなく、dateカラムはeventテーブルにしかないため
+　　　　　カラム名を指定すればどのテーブルのどのデータかわかるが、一方nameカラムは
+　　　　　petテーブルとeventテーブルのどちらにもあるため、カラム名を指定しただけでは
+　　　　　どのテーブルのnameカラムを使用したいのかがわからない。そのため、nameの前にはpet.をつけている。
 
 　　　　　このクエリーでは両方のテーブルから情報を取り出す必要があるため、from句で2つのテーブルを結合している。
 
@@ -151,9 +166,6 @@ selectステートメント
 　　　　　inner joinでは、on句で指定された条件を両方のテーブルが満たす場合に限って、結果にテーブルの行が許可される。
 　　　　　この例では、petテーブルのnameカラムとeventテーブルのnameカラムが一致する必要があるとon句で指定している。
 　　　　　一方のテーブルに名前が表示され、他方のテーブルには表示されない場合、on句の条件が失敗するため、結果に行は表示されない。
-
-　　　　　nameカラムは両方のテーブルにあるため、このカラムを参照するときはどちらのテーブルのものかを
-　　　　　明確に示す必要がある。そのためには、event.name のようにカラム名の前にテーブル名を付加する。
 
 　　　select p1.name, p1.sex, p2.name, p2.sex, p1.species
     　-> from pet as p1 inner join pet as p2
@@ -182,6 +194,11 @@ update テーブル名 set 変更するフィールド名 = '変更後の値' wh
 
 show warnings;
 　→ 警告を表示する。
+
+select database();
+　→ 現在選択しているデータベースを返す。どのデータベースも選択していない場合、結果はNULLになる。
+
+
 
 ============================================================================================================================
 
