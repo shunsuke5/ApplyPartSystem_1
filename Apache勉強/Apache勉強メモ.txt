@@ -1,0 +1,32 @@
+Apache勉強メモ
+
+・The default folder for your your webpages is DocumentRoot "c:/Apache24/htdocs"
+　と書いてあるため、公開するwebページはここに置く？
+
+・コマンドプロンプトで「c:\Apache24\bin」に移動し、httpd.exe コマンドを打つとサーバーが開始する。
+　http://localhost をブラウザで検索し、It works!のように表示されれば成功。
+　ctrl + c でサーバーは閉じることができる。
+
+・windowsにApacheサービスをインストールする時は「httpd.exe -k install」コマンドを使用。
+
+・「services.msc」コマンドでApacheサービスを起動/停止できる。
+
+・「httpd -h」コマンドでヘルプを見ることができる。
+
+・
+
+============================================================================================================================
+
+エラーやミス、わからないことなど
+
+・httpd -k install コマンドでwindowsにapacheサービスをインストールしたとき、以下のようなエラーが出た。
+
+　　C:\Windows\System32>httpd -k install
+　　Installing the 'Apache2.4' service
+　　The 'Apache2.4' service is successfully installed.
+　　Testing httpd.conf....
+　　Errors reported here must be corrected before the service can be started.
+　　AH00558: httpd: Could not reliably determine the server's fully qualified domain name, 
+　　using fe80::bb83:36d0:35ca:b0dc. Set the 'ServerName' directive globally to suppress this message
+
+　→ 恐らく、httpd.confの設定をしていなかったため、このエラーが出たのだと思われる。
