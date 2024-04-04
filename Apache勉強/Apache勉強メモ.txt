@@ -113,6 +113,187 @@ Apache勉強メモ
     Options +Indexes
     </Directory>
 
+　<Files>セクションの中にあるディレクティブはどのディレクトリにあるかに関わらず、指定された名前の全てのファイルに適用される。
+　例えば、以下の設定ディレクティブが設定ファイルの主セクションに書かれたときには、全ての場所のprivate.htmlという名前の
+　ファイルへのアクセスを拒否する。
+
+　　<Files private.html>
+    Order allow,deny
+    Deny from all
+    </Files>
+
+　ファイルシステムの特定の場所にあるファイルを指定するために、<Files>セクションと<Directory>セクションを組み合わせることができる。
+　例えば以下の設定では、/var/web/dir1 ディレクトリの下にあるすべてのprivate.htmlへのアクセスを拒否する。
+
+　　<Directory /var/web/dir1>
+    <Files private.html>
+    Order allow,deny
+    Deny from all
+    </Files>
+    </Directory>
+
+・web空間コンテナ
+
+　一方、<Location>ディレクティブとその正規表現版は、web空間上の内容に対して設定を変更する。
+　例えば、以下の設定では/privateで始まるURLパスへのアクセスを制限する。
+
+　　<Location /private>
+    Order Allow,Deny
+    Deny from all
+    </Location>
+
+　<Location>ディレクティブはファイルシステムと関係ある必要が全くない。
+　例えば以下の例では、どのようにして特定のURLをmod_statusで提供されているApache内部ハンドラにマップするかを示している。
+　ファイルシステムにserver-statusというファイルが存在する必要はない。
+
+　　<Location /server-status>
+    SetHandler server-status
+    </Location>
+
+・ワイルドカードと正規表現
+
+　<Directory>,<Files>,<Location>ディレクティブでは、C標準ライブラリのfnmatchのように
+　shellスタイルのワイルドカードキャラクタが使用できる。*は任意の文字列にマッチし、?は任意の1文字にマッチし、
+　[seq]はseqの任意の文字にマッチする。/はどのワイルドカードでもマッチされない。明示的に指定する必要がある。
+　これより柔軟なマッチングが必要な場合は、これらのコンテナに正規表現(regex)版である
+　<DirectoryMatch>,<FilesMatch>,<LocationMatch>があり、regexセクションを使用することで、ディレクティブの適用が
+　どのように変化するかを把握することが重要。
+　全ユーザディレクトリの設定を変更する、非regexワイルドカードセクションは以下の通り。
+
+　　<Directory /home/*/public_html>
+    Options Indexes
+    </Directory>
+
+　以下のようにregexセクションを使用することで、画像ファイルの多くのタイプに対するアクセスを一度に拒否できる。
+
+　　<FilesMatch \.(?i:gif|jpe?g|png)$>
+    Order allow,deny
+    Deny from all
+    </FilesMatch>
+
+・いつ何を使うか
+
+　ファイルシステムコンテナとweb空間コンテナを使い分けるのは、実際には非常に簡単。
+　ファイルシステムに依存するオブジェクトにディレクティブを適応する場合は、必ず<Directory>か<Files>を使用する。
+　ファイルシステムに依存しないオブジェクト(データベースから生成されるwebページなど)に
+　ディレクティブを適用する際には<Location>を使用する。
+
+　ファイルシステム上のオブジェクトへのアクセスを制限するために、<Location>を決して使用しないように注意する。
+　同一のファイルシステム位置にマップしている、web空間位置(URL)が多数あり、
+　設定した制限を迂回されてしまうかもしれないから。例えば以下の設定を考えてみる。
+
+　　<Location /dir/>
+    Order allow,deny
+    Deny from all
+    </Location>
+
+　http://yoursite.example.com/dir/へのリクエストではうまく動作する。
+　しかし大文字小文字を区別しないファイルシステムを使っていたらどうなるだろうか？
+　http://yoursite.example.com/DIR/へのリクエストで簡単にアクセス制限を迂回されてしまう。
+　これに対して<Directory>ディレクティブを使用すると、どのように呼び出されたかに関わらずその場所から提供される
+　内容に適用される。
+
+　※例外としてファイルシステムのリンクがある。シンボリックリンクを使って、同一のディレクトリを複数のファイルシステムに
+　設置できる。<Direcory>ディレクティブはパス名をリセットすることなくシンボリックリンクを辿るため、
+　高度なセキュリティが要求される場合は、適切にOptionsディレクティブを使用してシンボリックリンクを無効にするべき。
+
+・バーチャルホスト
+
+　<VirtualHost>コンテナは特定のホストに適用するディレクティブを格納する。
+　一台のマシンで複数のホストを異なる設定で提供したい時に有用。
+
+・プロクシ
+
+　<Proxy>と<ProxyMatch>コンテナは、特定のURLにマッチするmod_proxyプロクシサーバを経由して
+　アクセスしたサイトに対してのみ適用される設定ディレクティブを格納する。
+　例えば以下の設定は、cnn.comウェブサイトにアクセスするために用いられるプロクシサーバを制限する。
+
+　　<Proxy http://cnn.com/*>
+    Order allow,deny
+    Deny from all
+    </Proxy>
+
+　プロキシとは、「代理」という意味で、インターネットを接続する際に、ネットワークの内部から
+　外部へのアクセスを代理で行うシステムのこと。プロキシサーバとも呼ばれ、企業がサイバー攻撃などに対抗し、
+　自社の情報システムを安全に管理する手段として利用されている。プロキシが中継することで、
+　企業の端末が直接外部と接触しないため、セキュリティを強化できる。
+
+・どのディレクティブが使えるの？
+
+　どのタイプの設定セクションで度のディレクティブが使用できるかは、ディレクティブのcontextを確認する。
+　<Directory>で使用可能な者は全て、同様に<DirectoryMatch>,<Files>,<FilesMatch>,<Location>,<LocationMatch>,
+　<Proxy>,<ProxyMatch>セクションで使用可能。しかし以下のようにいくつか例外も存在する。
+
+　　AllowOverrideディレクティブは<Directory>セクションでのみ使用可能。
+　　FollowSymLinks と SymLinksIfOwnerMatch の Options は、<Directory>セクションか.htaccessファイルでのみ使用可能。
+　　Optionsディレクティブは、<Files>と<FilesMatch>セクションでは使用できない。
+
+・セクションのマージ方法
+
+　マージの順番は以下のようになっている。
+
+　　1.<Directory>(正規表現なし)と.htaccessを同時に(.htaccessが許可されていれば、それが<Directory>を上書きする)
+　　2.<Directory>(と <Directory ~>)
+　　3.<Files>と<FilesMatch>を同時に
+　　4.<Location>と<LocationMatch>を同時に
+
+　<Directory>以外は、それぞれのグループは設定ファイルに現れた順番に処理される。
+　<Directory>(上のグループ1)はディレクトリが短いものから長いものへと処理される。
+　例えば、<Directory /var/web/dir1>は<Directory /var/web/dir/subdir>の前に処理される。
+　複数の<Directory>セクションが同じディレクトリに適用される場合は、設定ファイル中の順番に従って処理される。
+　Includeによって挿入された設定は挿入しているファイルのIncludeディレクティブの位置にあったかのように扱われる。
+
+　<VirtualHost>セクション中のセクションはバーチャルホストの定義の外側の対応するセクションの後に適用される。
+　これによりバーチャルホストがメインのサーバ設定を上書きできるようになる。
+
+　mod_proxyでリクエストが処理される場合は、処理順番の内、<Directory>コンテナの部分が<Proxy>コンテナにとってかわられる。
+
+　後のセクションのディレクティブが前のセクションのものを上書きする。
+
+　[技術メモ] 実際には、名前を変換する段階(URLをファイル名にマップするためにAliasやDocumentRootが使用されるところ)
+　の直前に<Location>/<LocationMatch>が行われる。これらを適用した結果は変換が終わった後に完全に捨てられる。
+
+　以下はマージの順番を示すための恣意的な例になっている。リクエスト全てに適用されるとして、本例のディレクティブは
+　A -> B -> C -> D -> E の順番に適用される。
+
+　　<Location />
+    E
+    </Location>
+
+    <Files f.html>
+    D
+    </Files>
+
+    <VirtualHost *>
+    <Directory /a/b>
+    B
+    </Directory>
+    </VirtualHost>
+
+    <DirectoryMatch "^.*b$>
+    C
+    <DirectoryMatch>
+
+    <Directory /a/b>
+    A
+    </Directory>
+
+　もっと具体的な以下の例を考えてみる。<Directory>セクションに設置されたアクセス制限に関わらず、
+　<Location>セクションが最後に評価されて、サーバへのアクセスは制限されない。
+　このような結果から分かるように、マージの順番は重要なため、注意して使用する。
+
+　　<Location />
+    Order deny,allow
+    Allow from all
+    </Location>
+
+    # Woops! This <Directory> section will have no effect
+    <Directory />
+    Order allow,deny
+    Allow from all
+    Deny from badguy.example.com
+    </Directory>
+
 ============================================================================================================================
 
 エラーやミス、わからないことなど
