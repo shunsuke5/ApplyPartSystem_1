@@ -31,3 +31,7 @@ mod_proxy
 　　mod_proxy_http , mod_proxy_ftp , mod_proxy_ajp…など
 　　そのため、特定のプロキシの機能を使いたい場合は、mod_proxyと該当するモジュールをサーバに組み込む必要がある。
 
+mod_ssl
+　→ SSLを使用する。
+　　SSLセッションのキャッシュに使用するSSLSessionCacheディレクティブ、SSLStaplingCacheディレクティブが含まれている。
+
