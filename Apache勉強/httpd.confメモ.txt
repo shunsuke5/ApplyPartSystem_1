@@ -35,3 +35,6 @@ mod_ssl
 　→ SSLを使用する。
 　　SSLセッションのキャッシュに使用するSSLSessionCacheディレクティブ、SSLStaplingCacheディレクティブが含まれている。
 
+mod_so
+　→ 起動時や再起動時に実行コードとモジュールをサーバにロードする。
+
