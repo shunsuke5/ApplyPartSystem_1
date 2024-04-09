@@ -197,6 +197,133 @@ AddHandler
 
 　　例：AddHandler cgi-script .cgi
 
+ForceLanguagePriority
+　→ 要求にあうドキュメントを1つだけ返すことができないときに、LanguagePriorityディレクティブを使ってネゴシエーションの結果を返す。
+　　Preferは、同等の選択肢がいくつかあるときに、HTTPの300(MULTIPLE CHOICES)を返す代わりに、LanguagePriorityを使って
+　　1つだけドキュメントを返すようにする。
+　　Fallbackでは、HTTP406(NOT ACCEPTABLE)を送信する代わりに、LanguagePriorityが正しい結果を送る。
+
+    ForceLanguagePriority None|Prefer|Fallback [Prefer|Fallback]
+
+LanguagePriority
+　→ MultiViewsリクエストを扱う時に、クライアントが優先順位を提供していない場合の言語の優先順位を設定する。
+　　MIME-langのリストが優先度の降順に並ぶ。
+　　例文では、例えばfoo.htmlがリクエストされ、foo.html.frとfoo.html.deが両方存在し、
+　　ブラウザが言語の優先順位を提供していない場合はfoo.html.frが返される。
+
+　　このディレクティブは他の方法で最善の言語が決定できないときか、ForceLanguagePriorityディレクティブが「None」以外のときにのみ
+　　効果があることに注意する。一般的には、サーバ側ではなくクライアント側で好みの言語を決定する。
+
+    LanguagePriority MIME-lang [MIME-lang]...
+    
+    例：LanguagePriority en fr de
+
+SetEnv
+　→ 環境変数を設定し、それをCGIスクリプトとSSIページに渡すようにする。
+
+    SetEnv enc-variable value
+
+    例：SetEnv SPECIAL_PATH /foo/bin
+
+SetEnvIf
+　→ リクエストの属性に基づいて環境変数を定義する。最初の引数で指定できるattributeは以下の4つのどれか。
+　　1．HTTPリクエストヘッダフィールド。例えば、Host,User-Agent,Referer,Accept-Languageである。
+　　　 リクエストヘッダの集合を表すために正規表現を使うこともできる。
+　　2．以下のリクエストの一部分のどれか
+        Remote_Host → リクエストを行っているクライアントのホスト名(もしあれば)
+        Remote_Addr → リクエストを行っているクライアントのIPアドレス
+        Server_Addr → リクエストを受け取ったサーバのIPアドレス(2.0.43以降のみ)
+        Request_Method → 使用されているメソッドっ名(GET,POSTなど)
+        Request Protocol → リクエストが行われたプロトコルの名前とバージョン(例えば、HTTP/0.9,HTTP/1.1など)
+        Request_URI → URLのスキームとホストの後の部分。追加の情報として、クエリーストリングにマッチさせる場合については
+        　　　　　　　ReweriteCondディレクティブを参照する。
+　　3．リクエストと関連付けられる環境変数のリスト。これによりSetEnvIfディレクティブが以前のマッチの結果を使うことができるようになる。
+　　　 この方法のテストでは前の部分にあるSetEnvIf[NoCase]の結果のみを使用可能。「前」とは、より広い範囲に対して定義されている
+　　　 (サーバ全体のように)か、現在のディレクティブの範囲でより前の部分で定義されているか、ということ。環境変数である可能性は、
+　　　 リクエストの特性に対するマッチが存在せず、attributeに正規表現が使われなかった時にのみ考慮される。
+　　4．SSLクライアント証明書拡張への参照で、oidオブジェクトIDで指定されるもの。SSLリクエストでない場合や、
+　　　 oidが設定されていなかった場合はそれらの文字列はカンマ区切りで連結される。oidは文字列が価格庁への参照でなければならない。
+
+　　2つ目の引数は正規表現。これはregexがattributeにマッチする場合は、残りの引数が評価される。
+　　残りの引数は設定する変数の名前で設定される値を指定することもできる。これは、
+　　1．varname
+　　2．!varname
+　　3．varname=value
+　　のどれかの形式になる。最初の形式では値は1に設定される。2つ目はもし値が定義されていればそれを取り除く。
+　　3つ目は変数をvalueの与えられた値に設定する。2.0.51以降では、value内に$1..$9が存在すればそれを認識し、
+　　regexの対応する丸カッコで囲まれた部分で置換する。
+
+　　例文1行目は、リクエストがgif画像であるときに環境変数object_is_imageを設定している。
+　　2行目は、参照元のページがウェブサイトwww.mydomain.example.comにあるときにintra_site_referralを設定する。
+　　3行目は、環境変数NeascapeCommentを定義して、その値がSSLクライアント証明書の対応するフィールドの文字列であるようにする。
+　　ただしSSLクライアント証明書の対応するフィールドに文字列が存在する時にのみ、環境変数は設定される。
+
+    SetEnvIf attribute regex [!]env-variable[=value] [[!]env-variable[=value]]...
+
+    例：SetEnvIf Request_URI "\.gif$" object_is_image=gif
+        SetEnvIf Referer www\.mydomain\.example\.com intra_site_referral
+        SetEnvIf OID("2.16.840.1.113730.1.13") "(.*)" NetscapeComment=$1
+
+PassEnv
+　→ httpdプロセスを起動したシェルの環境からCGIスクリプトとSSIページに渡す環境変数を1つ以上指定する。
+
+    PassEnv env-variable [env-bariable] ...
+
+    例：PassEnv LD_LIBRARY_PATH
+
+Header
+　→ HTTP応答ヘッダを置換、追加、削除などの設定を行う。ヘッダはコンテントハンドラや出力フィルタが実行された直後に実行され、
+　　出ていくヘッダを変更できるようになっている。オプションのconditionはonsuccessかalwaysのどちらかを指定できる。
+　　これは内部ヘッダテーブルのどれを操作するかを決定する。onsuccesは2xxステータスコードの、
+　　alwaysは全てのステータスコード(2xxを含む)の意味になる。あるモジュールでセットされるヘッダをアンセットしたい場合は特に、
+　　どのテーブルがどの影響を受けるかを実際に試した方が良いだろう。
+
+　　行う処理は2番目の引数で決まる。この引数には以下の値を指定できる。
+    set
+　　　→ 応答ヘッダを設定する。同じ名前のヘッダが存在する場合はそれを置き換える。
+　　　　valueにはフォーマット文字列を指定することもできる。
+　　append
+　　　→ 応答ヘッダを既に存在する同じ名前のヘッダに追加する。新しい値が既存のヘッダに追加される時には、
+　　　　既存のヘッダの後にコンマで区切られて追加される。これはヘッダに複数の値を指定する時のHTTPの標準の方法である。
+
+　　add
+　　　→ ヘッダが既に存在している時でさえも、応答ヘッダを既存のヘッダに追加する。
+　　　　これにより、2つ(かそれ以上)のヘッダの名前が同じになることがある。その結果、想定できないことが起こる可能性があるので
+　　　　一般的にはappendの方を使う方が良いだろう。
+
+　　unset
+　　　→ もし指定された名前の応答ヘッダが存在していれば、削除される。同じ名前のヘッダが複数ある時は、すべて削除される。
+　　　　valueをつけてはいけない。
+
+　　echo
+　　　→ 指定されたものと同じ名前のリクエストヘッダをう応答ヘッダでそのまま返す。headerには正規表現も指定できる。
+　　　　valueをつけてはいけない。
+
+　　この引数の後にはヘッダ名(header)が続く。ヘッダ名には最後にコロンを含めることもできるが、なくても構わない。
+　　set,append,add,unsetでは大文字小文字は区別されない。echoのheader名は大文字小文字を区別し、正規表現を指定することもできる。
+
+　　add,append,setではvalueを3つ目の引数として指定する。valueに空白がある場合は二重引用符で囲む必要がある。
+　　valueは文字のみからなる文字列、フォーマット指示子を含む文字列、もしくは両方からなる文字列を指定できる。
+　　valueは以下のフォーマット指示子をサポートする。
+
+　　%t → リクエストを受け取った時刻を、Universal Coordinated Timeでの始まりの時刻(Jan,1,1970)から経過した時間を
+　　　　 マイクロ秒として表したもの。値の最初にはt=が付加される。
+　　%D → リクエストを受け取った時刻と、ヘッダを送り出した時間との差。これは、リクエストが存在していた期間を表す。
+　　　　 値の最初にはD=が付加される。
+　　%{FOOBAR}e → 環境変数FOOBARの値。
+　　%{FOOBAR}s → mod_sslが有効な場合、SSL環境変数FOOBARの内容。2.1以降でのみ利用できる。
+
+    Header [condition] set|append|add|unset|echo header [value]
+
+BrowserMatch
+　→ SetEnvIfの特例で、User-Agent HTTPリクエストヘッダに基づいて環境変数を設定する。例文の2行の結果は同じになる。
+
+    BrowserMatch regex [!]env-variable[=value] [[!]env-variable[=value]] ...
+    例：BrowserMatchNoCase Robot is_a_robot
+        SetEnvIfNoCase User-Agent Robot is_a_robot
+
+
+
 ============================================================================================================================
 
 モジュール一覧
@@ -318,4 +445,10 @@ CGI(Common Gateway Interface)
 　　わかりやすく言うと、webサーバがコンテンツ生成をする外部プログラムと強調して動作するための方法を定義している。
 　　そのプログラムはしばしばCGIプログラムやCGIスクリプトと呼ばれる。CGIは、ウェブサイトに動的なコンテンツを置くための最も簡単で
 　　一般的な方法である。
+
+apxs(APache eXtenSion tool)
+　→ モジュールソースを動的共有オブジェクト(DSO)にコンパイルし、Apache Webサーバにインストールする手助けをするperlスクリプト。
+
+SSI(Server Side Includes)
+　→ HTMLファイル中に処理ディレクティブを埋め込む技術の1つ。
 
