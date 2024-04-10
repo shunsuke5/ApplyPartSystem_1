@@ -322,7 +322,56 @@ BrowserMatch
     例：BrowserMatchNoCase Robot is_a_robot
         SetEnvIfNoCase User-Agent Robot is_a_robot
 
+ErrorLog
+　→ サーバに生じた様々なエラーを記録するためのファイルの名前を設定する。
+　　file-pathが絶対パスでないときは、ServerRootからの相対パスと見なされる。
 
+　　file-pathがパイプ|から始まる場合は、エラーログを処理するために実行されるコマンドが指定されていると解釈される。
+
+    ErrorLog file-path|syslog[:facility]
+    例：ErrorLog /var/log/httpd/error_log
+
+LogLevel
+　→ エラーログへ記録するメッセージの冗長性を調整する。以下のlevelを指定でき、順に重要度が下がっていく。
+
+　　emerg
+　　　→ 緊急、システムが利用できない
+　　　　例：Chile cannot open lock file. Exiting(子プロセスがロックファイルを開けなかった)
+
+　　alert
+　　　→ 直ちに対処が必要
+　　　　例：getpwuid:couldn't determine user name from uid (getpwuid:UIDからユーザ名を特定できなかった)
+
+　　crit
+　　　→ 致命的な状態
+　　　　例：socket:Failed to get a socket, exiting chile (socket: ソケットが得られないため、子プロセスを終了させた)
+
+　　error
+　　　→ エラー
+　　　　例：Premature end of cript headers (スクリプトのヘッダが足りないままで終わった)
+
+　　warn
+　　　→ 警告
+　　　　例：chile process 1234 did not exit, sending another SIGHUP (子プロセス1234が終了しなかった。もう一度SIGHUPを送る)
+
+　　notice
+　　　→ 普通だが、重要な情報
+　　　　例：httpd: caught SIGBUS,attempting to dump core in... (httpd:SIGBUSシグナルを受け、...へコアダンプした)
+
+　　info
+　　　→ 追加情報
+　　　　例："Server seems busy,(you may needo to increase StartServers, or Min/MaxSpareServers)..."
+　　　　　　(サーバは負荷が高い、StartServersやMin/MaxSpareServersの値を増やす必要があるかも)
+
+　　debug
+　　　→ デバッグメッセージ
+　　　　例："Opening config file..." (設定ファイルを開いている)
+
+　特定のレベルが指定された場合、それより高いレベルの全てのメッセージが報告される。
+　例えば、LogLevel infoに指定すると、noticeとwarnも報告される。
+　なおcrit以上のレベルを指定することが推奨される。
+
+    LogLevel level
 
 ============================================================================================================================
 
@@ -349,6 +398,10 @@ mod_mime
 　→ 拡張子を使っていろいろな「メタ情報」をファイルに関連付けるために使用される。
 　　この情報はドキュメントのファイル名とMIMEタイプ、言語、文字セット、エンコーディングとを関連付ける。
 　　この情報はブラウザに送られ、複数のファイルの中からユーザの好みのものが選ばれるように、コンテントネゴシエーションでも使われる。
+
+mod_env
+　→ このモジュールによりCGIスクリプトとSSIページに適用される環境イェン数を制御することができるようになる。
+　　環境変数はhttpdプロセスを起動したシェルから渡される。また、設定ファイルで環境変数を設定したり、削除したりすることができる。
 
 ============================================================================================================================
 

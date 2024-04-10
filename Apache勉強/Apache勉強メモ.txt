@@ -868,6 +868,61 @@ Apache勉強メモ
 　　　　そのようなブラウザはUTF-7文字セットを使って簡単にだますことができる。クロスサイトスクリプティング攻撃を防ぐために実装されている
 　　　　通常のエスケープ機構が、入力データ中にあるUTF-7でエンコードされたコンテンツ(リクエストURIなど)にはうまく動作しないから。
 
+　　force-proxy-request-1.0,proxy-nokeepalive,proxy-sendchunked,proxy-sendcl
+　　　→ これらの指示子はmod_proxyの挙動を変更する。詳細はmod_proxyのドキュメントを参照。
+
+・例
+
+　おかしな挙動をするクライアントに対してプロトコルの動作を変更する
+
+　古いバージョンのApacheでは、クライアントの問題に対応するためにhttpd.confニ次の行を加えるよう推奨されていたが、
+　今となっては、問題としていたくらい案tのは実際には見かけることは無くなってきたので、この設定はもはや必要ないかもしれない。
+
+　　BrowserMatch "Mozilla/2" nokeepalive
+    BrowserMatch "MSIE 4\.0b2;" nokeepalive dwngrade-1.0 force-response-1.0
+
+　画像へのリクエストをアクセスログに記録しない
+
+　以下の例では、画像へのリクエストがアクセスログに現れないようにする。これを変更することで、特定のディレクトリのログ収集をやめたり、
+　特定のホストからのリクエストのログ収集をやめたりすることが簡単にできる。
+
+　　SetEnvIf Request URI \.gif image-request
+    SetEnvIf Request URI \.jpg image-request
+    SetEnvIf Request URI \.png image-request
+    customLog logs/access_log common env=!image-request
+
+　「画像の盗用」を防ぐ
+
+　以下の例は、別のサーバにいる人が、あなたのサーバにある画像をinline画像として使用することを防ぐ。
+　これは推奨されている設定ではないが、ある限定された状況では有効。ここでは、全ての画像は/web/imagesというディレクトリにあると仮定する。
+
+　　SetEnvIf Referer "^http://www\.example\.com/" local_referal
+    SetEnvIf Referer "^$" local_referal
+    <Directory /web/images>
+        Order Deny,Allow
+        Deny from all
+        Allow from env=local_referal
+    </Directory>
+
+・ログファイル
+
+　webサーバを効果的に管理するためには、サーバの活動やパフォーマンス、今発生しているかもしれない問題に関するフィードバックを
+　得ることが必要である。Apache HTTPサーバには非常に包括的で柔軟なロギング機能がある。この文書はロギング機能の設定の仕方と、
+　ログに何が書かれているかを理解するための方法を説明する。
+
+・セキュリティに関する警告
+
+　Apacheがログファイルを書いているディレクトリに書き込める人は、ほぼ確実にサーバが起動されたuidへのアクセスを手に入れることができる。
+　そして、それは通常はrootユーザである。ちゃんと結果を考えることなく、そのディレクトリへの書き込み権限を与えないでください。
+　詳しくは https://httpd.apache.org/docs/current/misc/security_tips.html を確認する。
+
+　加えて、ログファイルにはクライアントからの情報がそのまま、エスケープされることなく書かれている。そのため、悪意のあるクライアントが
+　ログファイルに制御文字を挿入することができる。生のログを扱う時は注意する。
+
+・エラーログ
+
+　
+
 ============================================================================================================================
 
 エラーやミス、わからないことなど
