@@ -490,6 +490,36 @@ TransferLog
     例：LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
         TransferLog logs/access_log
 
+Options
+　→ 特定のディレクトリに対して、どの機能が使用可能かを制御する。
+　　optionをNoneに指定すると、特別な機能はすべて無効になる。また、以下の示す1個以上のものを指定できる。
+
+    All
+    　→ MultiViewsを除いたすべての機能が有効となる。これがデフォルト。
+
+    ExecCGI
+    　→ mod_cgiによるCGIスクリプトの実行を許可する。
+
+    FollowSymLinks
+    　→ サーバが、このディレクトリ内でシンボリックリンクを辿れるようにする。
+
+    Includes
+    　→ mod_includeが提供するSSIを有効にする。
+
+    IncludesNOEXEC
+    　→ SSIは有効になるが、#execコマンドと#exec CGIは無効になる。ただし#include virtualにより、
+    　　ScriptAliasされたディレクトリでCGIを実行することは可能である。
+
+    Indexes
+    　→ もし、URLがディレクトリにマップするリクエストで会って、且つDirectoryIndexで指定したファイル
+    　　(例えば、index.html)がディレクトリ内になければ、mod_autoindexがディレクトリ内の一覧を整形して返す。
+
+    SymLinksIfOwnerMatch
+    　→ シンボリック先のファイルまたはディレクトリが、シンボリックリンクの所有ユーザIDと同じ場合にのみ
+    　　シンボリックリンクを辿れるようにする。
+
+    Options [+|-] option [[+|-]option]...
+
 ============================================================================================================================
 
 モジュール一覧
