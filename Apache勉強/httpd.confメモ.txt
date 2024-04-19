@@ -490,6 +490,16 @@ TransferLog
     例：LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
         TransferLog logs/access_log
 
+DocumentRoot
+　→ httpdがファイルを提供するディレクトリを設定する。Aliasのようなディレクティブにマッチしない場合には、
+　　ドキュメントの(ファイルシステム上の)パスを生成するために、リクエストされたURLのパス部分をドキュメントルートに付与する。
+　　例文では、http://www.my.host.com/index.html へのアクセスがあれば /usr/web/index.html が返される。
+　　directory-pathが絶対パスでない場合は、ServerRootからの相対パスと見なされる。
+　　DocumentRootは最後のスラッシュなしで指定する必要がある。
+
+    DocumentRoot directory-path
+    例：DocumentRoot /usr/web
+
 Options
 　→ 特定のディレクトリに対して、どの機能が使用可能かを制御する。
 　　optionをNoneに指定すると、特別な機能はすべて無効になる。また、以下の示す1個以上のものを指定できる。
@@ -519,6 +529,126 @@ Options
     　　シンボリックリンクを辿れるようにする。
 
     Options [+|-] option [[+|-]option]...
+
+Alias
+　→ ドキュメントをローカルファイルシステムのDocumentRoot以外の場所に保管することを可能にする。
+　　URLの(%が複合された)パスが URL-path で始まるものは directory-filename で始まるローカルファイルにマップされる。
+　　例文では、http://myserver/image/foo.gif へのリクエストに対して、サーバはファイル /ftp/pub/image/foo.gif を返す。
+
+　　もしURL-pathの最後に/ を書いたなら、サーバがエイリアスを展開するためには、最後の / が必要になることに注意する。
+　　すなわち、Alias /icons/ /usr/local/apache/icons/ と言うものを使用している場合は、/icons というURLはエイリアスされない。
+
+    Alias URL-path file-path|directory-path
+    例：Alias /image /ftp/pub/image
+
+ScriptAlias
+　→ 対象ディレクトリに mod_cgi のcgi-scriptハンドラで処理されるCGIスクリプトがあることを示す以外はAliasディレクティブと同じ。
+　　URLの(%が複合された)パスがURL-pathで始まるものはローカルファイルシステムのフルパスである2番目の引数にマップされる。
+　　例文では、http://myserver/cgi-bin/foo へのリクエストに対してサーバはスクリプト/web/cgi-bin/foo を実行する。
+
+    ScriptAlias URL-path file-path|directory-path
+    例：ScriptAlias /cgi-bin/ /web/cgi-bin/
+
+AliasMatch
+　→ Aliasとほとんど同じだが、簡単な先頭からのマッチを行うのではなく、標準正規表現を利用する。ここで指定された正規表現とURLの
+　　パスが合うかどうかを調べ、合う場合は括弧でくくられたマッチを与えられた文字列で置き換え、それをファイル名として使用する。
+　　例文では、/iconsディレクトリを使うために使用する正規表現を用いている。最後の$1は、regex内で指定されている()内の正規表現に
+　　当てはまったディレクトリ名やファイル名を指定している。
+
+    AliasMatch regex file-path|directory-path
+    例：AliasMatch ^/icons(.*) /usr/local/apache/icons$1
+
+ScriptAliasMatch
+　→ ScriptAliasとほとんど同じだが、簡単な先頭からのマッチを行うのではなく、標準正規表現を利用する。ここで指定された正規表現と
+　　URL-pathが合うかどうかを調べ、合う場合は括弧で括られたマッチを与えられた文字列で置き換え、それをファイル名として使用する。
+　　例文では、標準の/cgi-binを使用するようにするためのものを用いている。最後の$1は、regex内で指定されている()内の正規表現に
+　　当てはまったディレクトリ名やファイル名を指定している。
+
+    ScriptAliasMatch regex file-path|directory-path
+    例：ScriptAliasMatch ^/cgi-bin(.*) /usr/local/apache/cgi-bin$1
+
+Redirect
+　→ 古いURLを新しいものへマップする。新しいURLがクライアントに返される。そして、クライアントは新しいアドレスをもう一回取得
+　　しようとする。URL-path(%が複合された)パスで始まるドキュメントへの全てのリクエストはURLで始まる新しい(%が符号化された)URLへの
+　　リダイレクトエラーが返される。1つ目の例文では、クライアントは http://myserver/service/foo.txt へのリクエストを行うと、
+　　代わりに http://foo2.bar.com/service/foo.txt をアクセスするように告げられる。
+
+　　設定ファイル中の順番に関わらず、Redirect系のディレクティブはAliasディレクティブとScriptAliasディレクティブよりも優先される。
+　　また、.htaccessファイルや<Directory>セクションの中で使われていたとしても、URL-pathは相対パスではなく、完全なURLでなければならない。
+
+　　もしstatus引数が与えられていなければ、リダイレクトは temporary(HTTPステータス302)になる。これはクライアントにリソースが一時的に
+　　移動したと言うことを示す。status引数は他のHTTPのステータスコードを返すために使用することができる。
+　　例としては以下の通り。
+
+    permanent
+    　→ 永久にリダイレクトをするステータス(301)を返す。これはリソースが永久に移動したということを意味する。
+
+    temp
+    　→ 一時的なリダイレクトステータス(302)を返す。これがデフォルト。
+
+    seeother
+    　→ See Otherステータス(303)を返す。これはリソースが他のもので置き換えられたことを意味する。
+
+    gone
+    　→ Goneステータス(410)を返す。これはリソースが永久に削除されたことを意味する。
+    　　このステータスが使用された場合、url引数は省略されなければならない。
+
+　　statusの値にステータスコードを数値で与えることで、他のステータスコードも返すことができる。ステータスが300と399の間にある場合、
+　　url引数は存在していなければならない。その他の場合は省略されていなければならない。ただし、ステータスはApacheのコードが
+　　知っているものである必要がある(http_protocol.cの関数 send_error_responseを参照)。
+
+    Redirect [status] URL-path URL
+    例：Redirect /service http://foo2.bar.com/service
+        Redirect permanet /one http://example.com/other
+        Redirect 303 /three http://example.com/other
+
+RedirectMatch
+　→ Redirectとほとんど同じだが、簡単な先頭からのマッチを行うのではなく、標準正規表現を利用する。
+　　ここで指定された正規表現とURL-pathが合うかどうかを調べ、合う場合は括弧でくくられたマッチを与えられた文字列で置き換え、
+　　それをファイル名として使用する。例文はすべてのGIFファイルを別サーバの同様な名前のJPEGファイルにリダイレクトする。
+
+    RedirectMatch [status] regex URL
+    例：RedirectMatch (.*)\.gif$ http://www.anotherserver.com$1.jpg
+
+UserDir
+　→ ユーザのドキュメントへのリクエストを受けた時に使うユーザのホームディレクトリ中の、実際のディレクトリを設定する。
+　　directory-filenameには以下のどれかを指定する。1つ目の例文は少数のユーザのみがUserDirディレクトリを利用し、
+　　それ以外には利用させたくない場合のもの。2つ目の例文は大部分のユーザはUserDirディレクトリを使用するが、
+　　少数の人は不許可にする場合のもの。3つ目の例文は他のユーザディレクトリを指定するもの。
+
+    ・ディレクトリ名。
+
+    ・disabledキーワード。enabledキーワードで明示的に指定されたユーザ以外の全てのユーザ名-ディレクトリ変換をしないようにする。
+
+    ・disabledキーワードと、スペース区切りのユーザ名リスト。このリスト中に含まれるユーザ名に対しては、たとえenabled節に
+    　あったとしても、決してディレクトリ変換は行われない。
+
+    ・enabledキーワードとスペース区切りのユーザ名リスト。全体では変換が無効になっていたとしても、
+    　これらのユーザ名にはディレクトリ変換が行われる。ただし、disabled節にもあれば変換はされない。
+
+　　もしenabledもdisabledキーワードもUserDirに現れていなければ、引数はファイル名パターンとして扱われ、名前からディレクトリへの
+　　変換の指定を行う時に使われる。http://www.example.com/~bob/one/two.html へのリクエストは以下のように変換される。
+
+    UserDirディレクティブ       変換後のパス
+    UserDir public_html         ~bob/public_html/one/two.html
+    UserDir /usr/web            /usr/web/bob/one/two.html
+    UserDir /home/*/www         /home/bob/www/one/two.html
+
+　　以下のディレクティブはクライアントに対してリダイレクトを送信する。
+
+    UserDirディレクティブ                   変換後のパス
+    UserDir http://www.example.com/users    http://www.example.com/users/bob/one/two.html
+    UserDir http://www.example.com/*/usr    http://www.example.com/bob/usr/one/two.html
+    UserDir http://www.example.com/~*/      http://www.example.com/~bob/one/two.html
+
+    UserDir directory-filename [directory-filename]...
+    例：UserDir disabled
+        UserDIr enabled user1 user2 user3
+
+    例：UserDir enabled
+        UserDir disabled user4 user5 user6
+
+    例：UserDir public_html /usr/web http://www.example.com/
 
 ============================================================================================================================
 
@@ -558,6 +688,25 @@ mod_log_config
 　　このモジュールは3つのディレクティブを提供する。ログファイルを作成するためのTransferLog、新しい書式を定義するLogFormat、
 　　ログファイルと書式を一度に定義するCustomLogである。各リクエストが複数回ログ収集されるようにするためにTransferLogディレクティブと
 　　CustomLogディレクティブは複数回使用することができる。
+
+mod_alias
+　→ サーバにリクエストが到着したときにURLの操作や制御をすることを可能にする。様々なコンテキスト中でのAliasやRedirectは他のディレクティブと
+　　同じように標準の「マージ規則」に従って処理される。ただし、(例えば<VirtualHost>セクションの中のように)複数のAliasやRedirectが
+　　同じコンテキスト中に現れた場合は決まった順番で処理される。
+
+　　まず、Aliasの前に全てのRedirectが処理される。そのため、RedirectかRedirectMatchにマッチするリクエストにはAliasは決して適用されない。
+　　次に、AliasとRedirectが設定ファイル中の順番に適用され、最初にマッチしたものが優先される。そのため、2つ以上のディレクティブが
+　　同じパスに適用される時は、全てのディレクティブの効果を得るためにはより詳しいパスを先に書く必要がある。
+　　例えば、以下の設定は期待通りの動作をする。
+
+    Alias /foo/bar /baz
+    Alias /foo /gaq
+
+　　しかし、上記の2つのディレクティブの順番が逆になると、/foo Aliasが常に /foo/bar Aliasより先にマッチするので、
+　　/foo/bar は決して適用されることは無くなってしまう。
+
+mod_userdir
+　→ http://example.com/~user/ 構文を使ってユーザ専用ディレクトリにアクセスできるようにする。UserDirディレクティブのみ。
 
 ============================================================================================================================
 
