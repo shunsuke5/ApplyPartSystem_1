@@ -642,6 +642,7 @@ UserDir
     UserDir http://www.example.com/~*/      http://www.example.com/~bob/one/two.html
 
     UserDir directory-filename [directory-filename]...
+    
     例：UserDir disabled
         UserDIr enabled user1 user2 user3
 
@@ -649,6 +650,19 @@ UserDir
         UserDir disabled user4 user5 user6
 
     例：UserDir public_html /usr/web http://www.example.com/
+
+ProxyPass
+　→ リモートサーバをローカルサーバの名前空間にマップできるようにする。ローカルサーバは通常の意味でのプロキシとしては動作せず、
+　　リモートサーバのミラーとして振舞う。pathはローカルの仮想パスの名前。urlはリモートサーバの部分URLになり、
+　　クエリー文字列を含むことはできない。ProxyPassディレクティブを使っている時はProxyRequestsディレクティブは通常はoffに設定されるべき。
+　　例文1では、http://example.com/mirror/foo/bar へのリクエストが内部的に http://backend.example.com/bar へのプロキシリクエストに
+　　変換されることになる。例文2では、サブディレクトリ/mirror/foo/i を除く/mirror/foo への全てのリクエストをbackend.example.com
+　　にプロキシする。そのため、一般的んProxyPassディレクティブの前に除外ディレクティブを置く必要があり、順番が重要となる。
+
+    ProxyPass [path] !|url [key=value key=value ...]
+    例：ProxyPass /mirror/foo http://backend.example.com
+    例：ProxyPass /mirror/foo/i !
+        ProxyPass /mirror/foo http://backend.example.com
 
 ============================================================================================================================
 

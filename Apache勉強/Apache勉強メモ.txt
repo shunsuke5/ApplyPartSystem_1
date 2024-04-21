@@ -1301,7 +1301,27 @@ URLからファイルシステム上の位置へのマップ
 
 ・リバースプロキシ
 
-　
+　Apacheは遠隔地にあるドキュメントをローカルのサーバのURL空間に持ってくることもできる。この手法はリバースプロキシと呼ばれている。
+　webサーバが遠隔地のドキュメントを取得してクライアントに送り返すのがプロキシサーバの動作のように見えるからである。
+　クライアントにはドキュメントがリバースプロキシサーバから送られてきているように見える点が通常のプロキシとは異なる。
+
+　以下の例では、クライアントが/foo ディレクトリの下にあるドキュメントをリクエストすると、サーバがinternal.example.com の/bar 
+　ディレクトリから取得して、さもローカルサーバからのドキュメントのようにしてクライアントに返す。
+
+    ProxyPass /foo/ http://internal.example.com/bar/
+    ProxyPassReverse /foo/http://internal.example.com/bar/
+    ProxyPassReverseCookieDomain internal.example.com public.example.com
+    ProxyPassReverseCookiePath /foo/ /bar/
+
+　ProxyPassディレクティブはサーバが適切なドキュメントを取得するように設定し、ProxyPassReverseディレクティブはinternal.example.com
+　からのリダイレクトがローカルサーバの適切なディレクトリを指すように書き換える。同様に、ProxyPassReverseCookieDomain と
+　ProxyPassReverseCookiePath でバックエンド側サーバの発行したCookieを書き換えることができる。
+
+　ただし、ドキュメントの中のリンクは書き換えられない、ということは知っておく。そのため、internal.example.comへの絶対パスによるリンクでは、
+　クライアントがプロキシサーバを抜け出してinternal.example.comに直接リクエストを送る、ということになる。
+　サードパーティ製モジュールのmod_proxy_html は、HTMLとXHTML中のリンクを書き換えることができる。
+
+・リライトエンジン
 
 ============================================================================================================================
 
